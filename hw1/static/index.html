@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spell Checker</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-lg border-0 h-100">
+                    <div class="card-body">
+                        <h2 class="card-title text-center mb-4">Enter Text</h2>
+                        <div class="form-group">
+                            <textarea id="inputText" class="form-control" rows="10" placeholder="Enter text here..."></textarea>
+                        </div>
+                        <button id="checkButton" class="btn btn-primary btn-block mt-3">Check Spelling</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-lg border-0 h-100">
+                    <div class="card-body">
+                        <h2 class="card-title text-center mb-4">Corrected Text</h2>
+                        <pre id="outputText" class="p-3 border rounded" style="white-space: pre-wrap;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('checkButton').addEventListener('click', function() {
+            const inputText = document.getElementById('inputText').value;
+            if (window.pywebview) {
+                window.pywebview.api.process_text(inputText).then(function(response) {
+                    document.getElementById('outputText').innerText = response.corrected_text;
+                }).catch(function(error) {
+                    console.error('Error:', error);
+                    document.getElementById('outputText').innerText = 'An error occurred. Please try again.';
+                });
+            } else {
+                document.getElementById('outputText').innerText = 'PyWebView is not available.';
+            }
+        });
+    </script>
+</body>
+</html>
