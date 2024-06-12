@@ -175,8 +175,8 @@ class SpellChecker:
         corrected_sentence = re.sub(r"\s([,])", r"\1", corrected_sentence)
         corrected_sentence = re.sub(r"(\d)([,])\s+(\d)", r"\1\2\3", corrected_sentence)
 
-        if corrected_sentence[-1] != ".":
-            corrected_sentence += "."
+        if not corrected_sentence.endswith('.'):
+            corrected_sentence += '.'
 
         return corrected_sentence
 

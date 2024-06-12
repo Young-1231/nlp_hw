@@ -5,47 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spell Checker</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        .highlight {
+            background-color: yellow;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
+        <h1 class="text-center mb-4">Spell Corrector</h1>
         <div class="row">
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-lg border-0 h-100">
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
-                        <h2 class="card-title text-center mb-4">Enter Text</h2>
+                        <h2 class="card-title text-center mb-4">Original Text</h2>
                         <div class="form-group">
                             <textarea id="inputText" class="form-control" rows="10" placeholder="Enter text here..."></textarea>
                         </div>
-                        <button id="checkButton" class="btn btn-primary btn-block mt-3">Check Spelling</button>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <p class="mb-0">Word count: <span id="wordCount">0</span></p>
+                            <div>
+                                <button id="clearButton" class="btn btn-secondary mr-2">Clear</button>
+                                <button id="checkButton" class="btn btn-primary">Correcting</button>
+                            </div>
+                        </div>
+                        <div id="spinner" class="spinner-border text-primary mt-3" role="status" style="display: none;">
+                            <span class="sr-only">Loading...</span>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card shadow-lg border-0 h-100">
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h2 class="card-title text-center mb-4">Corrected Text</h2>
-                        <pre id="outputText" class="p-3 border rounded" style="white-space: pre-wrap;"></pre>
+                        <pre id="outputText" class="p-3 border rounded" style="white-space: pre-wrap; background-color: #f8f9fa;"></pre>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <script>
+        const inputTextArea = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const wordCountElement = document.getElementById('wordCount');
+        const spinner = document.getElementById('spinner');
+        const clearButton = document.getElementById('clearButton');
+
+        inputTextArea.addEventListener('input', updateWordCount);
+        clearButton.addEventListener('click', clearText);
+
+        function updateWordCount() {
+            const text = inputTextArea.value;
+            const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            wordCountElement.textContent = wordCount;
+        }
+
+        function clearText() {
+            inputTextArea.value = '';
+            outputText.innerText = '';
+            wordCountElement.textContent = 0;
+        }
+
         document.getElementById('checkButton').addEventListener('click', function() {
-            const inputText = document.getElementById('inputText').value;
+            const inputText = inputTextArea.value;
+
+            outputText.innerText = '';
+            spinner.style.display = 'block';
+
+            if (inputText.trim() === '') {
+                outputText.innerText = 'Please enter some text.';
+                spinner.style.display = 'none';
+                return;
+            }
+
             if (window.pywebview) {
                 window.pywebview.api.process_text(inputText).then(function(response) {
-                    document.getElementById('outputText').innerText = response.corrected_text;
+                    displayCorrectedText(response.corrected_text, response.differences);
+                    spinner.style.display = 'none';
                 }).catch(function(error) {
                     console.error('Error:', error);
-                    document.getElementById('outputText').innerText = 'An error occurred. Please try again.';
+                    outputText.innerText = 'An error occurred. Please try again.';
+                    spinner.style.display = 'none';
                 });
             } else {
-                document.getElementById('outputText').innerText = 'PyWebView is not available.';
+                outputText.innerText = 'PyWebView is not available.';
+                spinner.style.display = 'none';
             }
         });
+
+        function displayCorrectedText(text, differences) {
+            const words = text.split(/\s+/);
+            const highlightedWords = words.map((word, index) => {
+                if (differences.includes(index)) {
+                    return `<span class="highlight">${word}</span>`;
+                } else {
+                    return word;
+                }
+            });
+            outputText.innerHTML = highlightedWords.join(' ');
+        }
     </script>
 </body>
 </html>
